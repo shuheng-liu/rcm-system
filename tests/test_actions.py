@@ -1,3 +1,5 @@
+import string
+import random
 import pytest
 from passlib.hash import pbkdf2_sha256
 from mongoengine import connect
@@ -13,6 +15,16 @@ def clean_up(db=db):
 
 
 clean_up()
+
+
+def random_user_info(length=5):
+    rstr = lambda n: ''.join(random.choice(string.ascii_letters) for _ in range(n))
+    email = rstr(length) + "@" + rstr(length) + ".com"
+    password = rstr(length * 4)
+    first_name = rstr(length * 2)
+    last_name = rstr(length * 2)
+    gender = random.choice("FM")
+    return email, password, first_name, last_name, gender
 
 
 def test_signup():
@@ -44,5 +56,30 @@ def test_signup():
     # student without gender
     with pytest.raises(ValidationError):
         signup(role=Student, email='jane@doe.com', password='pwd', first_name='Jane', last_name='Doe')
+
+    clean_up()
+
+
+def test_signin():
+    from actions import signup
+    from actions import signin
+    from models import Student, Instructor, Staff
+
+    for role in [Student, Instructor, Staff]:
+        eml, pwd, fn, ln, gnd = random_user_info(length=5)
+        signup(role=role, email=eml, password=pwd, first_name=fn, last_name=ln, gender=gnd)
+        user = signin(role=role, email=eml, pwd_submitted=pwd)
+        assert user.first_name == fn
+        assert user.last_name == ln
+        assert user.email == eml
+        assert user.gender == gnd
+
+        eml2, pwd2, _, _, _ = random_user_info(length=6)
+        # Non-existent email
+        with pytest.raises(ActionError):
+            signin(role=role, email=eml2, pwd_submitted=pwd)
+        # Incorrect password
+        with pytest.raises(ActionError):
+            signin(role=role, email=eml, pwd_submitted=pwd2)
 
     clean_up()
