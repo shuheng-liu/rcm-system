@@ -41,7 +41,7 @@ class RequestForCourse(EmbeddedDocument):
 class Student(User):
     gender = StringField(regex='(M|F)', max_length=1, min_length=1, required=True)
     aka = StringField(max_length=20)
-    courses = EmbeddedDocumentListField(RequestForCourse, default=list, required=True)
+    req_for_courses = EmbeddedDocumentListField(RequestForCourse, default=list)
 
 
 class Instructor(User):
