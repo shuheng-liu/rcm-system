@@ -22,12 +22,18 @@ def signup(role, email, password, first_name, last_name, gender=None):
     user.save()
 
 
-def signin(email, pwd_submitted, role=None):
-    # TODO verify `email` against `password`; returns True/False
-    pass
+def signin(role, email, pwd_submitted):
+    # verify `email` against `password`; return the user on success
+    accounts = role.objects(email=email)
+    if accounts.count() == 0:
+        raise ActionError(f"Incorrect username or password")
+    user = accounts.first()
+    if not pbkdf2_sha256.verify(pwd_submitted, user.password):
+        raise ActionError(f"Incorrect username or password")
+    return user
 
 
-def change_password(user, old_password, password, role=None):
+def change_password(role, user, old_password, password):
     # TODO verify old password
     pass
     # TODO update password
@@ -47,7 +53,7 @@ def new_course(code, start_date, course_name, professor):
 
 
 def set_professor(instructor, course):
-    # TODO set `course.professor` as `insturcotr`
+    # TODO set `course.professor` as `instructor`
     pass
 
 
