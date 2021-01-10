@@ -36,9 +36,24 @@ def test_student():
             req_for_courses=[]).save()
 
     # TODO add a nonempty `req_for_courses` test case
+    pass
 
     assert Student.objects(req_for_courses__size=0).count() == 3
 
     # missing gender
     with pytest.raises(ValidationError):
         Student(first_name='John2', last_name='Doe2', email='john@doe.com', password='pwd').save()
+
+
+def test_instructor():
+    from models import Instructor
+    Instructor(first_name='Joe', last_name='Biden', email='joe@biden.com', password='pwd', gender='M',
+               courses=[]).save()
+    Instructor(first_name='Kamala', last_name='Harris', email='kamala@harris.com', password='pwd', gender='F',
+               requests_received=[]).save()
+    Instructor(first_name='Kamala', last_name='Harris', email='kamala@harris.com', password='pwd').save()
+    # TODO add a nonempty `request_received` test case
+    pass
+
+    # TODO add a nonempty `courses` test case
+    pass
