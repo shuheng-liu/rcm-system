@@ -8,6 +8,10 @@ db = connect('rcm-test-db')
 db.drop_database('rcm-test-db')
 
 
+def clean_up(db=db):
+    db.drop_database('rcm-test-db')
+
+
 def test_generic_user():
     from models import GenericUser
     GenericUser(first_name='John', last_name='Doe', email='john@doe.com', password='pwd').save()
@@ -27,6 +31,8 @@ def test_generic_user():
     with pytest.raises(ValidationError):
         GenericUser(first_name='Johnny').save()
 
+    clean_up()
+
 
 def test_student():
     from models import Student
@@ -44,6 +50,8 @@ def test_student():
     with pytest.raises(ValidationError):
         Student(first_name='John2', last_name='Doe2', email='john@doe.com', password='pwd').save()
 
+    clean_up()
+
 
 def test_instructor():
     from models import Instructor
@@ -58,17 +66,19 @@ def test_instructor():
     # TODO add a nonempty `courses` test case
     pass
 
+    clean_up()
+
 
 def test_staff():
     from models import Staff
 
     Staff(first_name='Tony', last_name='Stark', email='tony@stark.com', password='pwd', gender='M',
           full_access=True).save()
-
     Staff(first_name='Pepper', last_name='Potts', email='pepper@potts.com', password='pwd', gender='F').save()
-
     Staff(first_name='Morgan', last_name='Stark', email='morgan@stark.com', password='pwd', gender='F',
           accessible_courses=[]).save()
 
     # TODO add a nonempty `accessible_couress` test case
     pass
+
+    clean_up()
