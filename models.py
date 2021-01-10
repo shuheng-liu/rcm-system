@@ -14,6 +14,7 @@ from mongoengine import LazyReferenceField
 from mongoengine import EmbeddedDocumentField
 from mongoengine import EmbeddedDocumentListField
 from mongoengine import IntField
+from mongoengine import BooleanField
 from mongoengine import StringField
 from mongoengine import ValidationError
 
@@ -50,7 +51,8 @@ class Instructor(User):
 
 
 class Staff(User):
-    pass
+    full_access = BooleanField(default=False)
+    accessible_courses = ListField(ReferenceField('Course'))
 
 
 class Course(Document):
