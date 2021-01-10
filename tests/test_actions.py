@@ -83,3 +83,29 @@ def test_signin():
             signin(role=role, email=eml, pwd_submitted=pwd2)
 
     clean_up()
+
+
+def test_change_password():
+    from actions import signup, signin
+    from actions import change_password
+    from models import Student, Instructor, Staff
+
+    for role in [Student, Instructor, Staff]:
+        eml, pwd, fn, ln, gnd = random_user_info(length=5)
+        _, pwd2, _, _, _ = random_user_info(length=6)
+        user = signup(role=role, email=eml, password=pwd, first_name=fn, last_name=ln, gender=gnd)
+        # Incorrect password, reject password changing
+        with pytest.raises(ActionError):
+            change_password(user, pwd2, pwd2)
+        # Correct password; password changes to pwd2
+        change_password(user, pwd, pwd2)
+        # Sign in using new password
+        signin(role=role, email=eml, pwd_submitted=pwd2)
+        # Sign in using old password
+        with pytest.raises(ActionError):
+            signin(role, email=eml, pwd_submitted=pwd)
+
+    clean_up()
+
+
+
