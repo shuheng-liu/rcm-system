@@ -27,3 +27,18 @@ def test_generic_user():
     with pytest.raises(ValidationError):
         GenericUser(first_name='Johnny').save()
 
+
+def test_student():
+    from models import Student
+    Student(first_name='John', last_name='Doe', email='john@doe.com', password='pwd', gender='M').save()
+    Student(first_name='James', last_name='Bond', email='james@bond.com', password='pwd', gender='M', aka='007').save()
+    Student(first_name='Jane', last_name='Doe', email='jane@doe.com', password='pwd', gender='F',
+            req_for_courses=[]).save()
+
+    # TODO add a nonempty `req_for_courses` test case
+
+    assert Student.objects(req_for_courses__size=0).count() == 3
+
+    # missing gender
+    with pytest.raises(ValidationError):
+        Student(first_name='John2', last_name='Doe2', email='john@doe.com', password='pwd').save()
