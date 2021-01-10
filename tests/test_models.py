@@ -1,7 +1,8 @@
+import pytest
+from datetime import date
 from mongoengine import connect
 from mongoengine import NotUniqueError
 from mongoengine import ValidationError
-import pytest
 
 # connect and initialize database
 db = connect('rcm-test-db')
@@ -86,7 +87,6 @@ def test_staff():
 
 def test_course():
     from models import Course, Instructor, Staff, Student
-    from datetime import date
     today = date.today()
 
     # instructors
@@ -127,3 +127,88 @@ def test_course():
         Course(code='CS103', course_name='Computational Science', professor=tony).save()
 
     clean_up()
+
+
+def test_request():
+    from models import Student, Instructor, Course
+    from models import Request
+    from models import STATUS_REQUESTED, STATUS_EMAILED, STATUS_DRAFTED, STATUS_FULFILLED
+
+    ILLEGAL_STATUS = 1234
+
+    # date
+    today = date.today()
+    # instructor & student
+    joe = Instructor(first_name='Joe', last_name='Biden', email='joe@biden.com', password='pwd').save()
+    john = Student(first_name='John', last_name='Doe', email='john@doe.com', password='pwd', gender='M').save()
+    # course
+    pl999 = Course(code='PL999', course_name='US Presidency', professor=joe).save()
+
+    # w/ everything filled (except for messages)
+    Request(student=john, instructor=joe, course=pl999,
+            school_applied='Harvard', program_applied='Politics', deadline=today,
+            date_created=today, date_updated=today, date_fulfilled=today, status=STATUS_FULFILLED).save()
+    # w/o date_created
+    Request(student=john, instructor=joe, course=pl999,
+            school_applied='Harvard', program_applied='Politics', deadline=today,
+            date_updated=today, date_fulfilled=today, status=STATUS_FULFILLED).save()
+    # w/o date_fulfilled
+    Request(student=john, instructor=joe, course=pl999,
+            school_applied='Harvard', program_applied='Politics', deadline=today,
+            date_created=today, date_updated=today, status=STATUS_DRAFTED).save()
+
+    # w/o student
+    with pytest.raises(ValidationError):
+        Request(instructor=joe, course=pl999,
+                school_applied='Harvard', program_applied='Politics', deadline=today,
+                date_created=today, date_updated=today, date_fulfilled=today, status=STATUS_FULFILLED).save()
+    # w/o professor
+    with pytest.raises(ValidationError):
+        Request(student=john, course=pl999,
+                school_applied='Harvard', program_applied='Politics', deadline=today,
+                date_created=today, date_updated=today, date_fulfilled=today, status=STATUS_FULFILLED).save()
+    # w/o course
+    with pytest.raises(ValidationError):
+        Request(student=john, instructor=joe,
+                school_applied='Harvard', program_applied='Politics', deadline=today,
+                date_created=today, date_updated=today, date_fulfilled=today, status=STATUS_FULFILLED).save()
+    # w/o school_applied
+    with pytest.raises(ValidationError):
+        Request(student=john, instructor=joe, course=pl999,
+                program_applied='Politics', deadline=today,
+                date_created=today, date_updated=today, date_fulfilled=today, status=STATUS_FULFILLED).save()
+    # w/o program_applied
+    with pytest.raises(ValidationError):
+        Request(student=john, instructor=joe, course=pl999,
+                school_applied='Harvard', deadline=today,
+                date_created=today, date_updated=today, date_fulfilled=today, status=STATUS_FULFILLED).save()
+    # w/o deadline
+    with pytest.raises(ValidationError):
+        Request(student=john, instructor=joe, course=pl999,
+                school_applied='Harvard', program_applied='Politics',
+                date_created=today, date_updated=today, date_fulfilled=today, status=STATUS_FULFILLED).save()
+    # w/o date_fulfilled but status==STATUS_FULFILLED
+    with pytest.raises(ValidationError):
+        Request(student=john, instructor=joe, course=pl999,
+                school_applied='Harvard', program_applied='Politics', deadline=today,
+                date_created=today, date_updated=today, status=STATUS_FULFILLED).save()
+    # w/ date_fulfilled but status!=STATUS_FULFILLED
+    with pytest.raises(ValidationError):
+        Request(student=john, instructor=joe, course=pl999,
+                school_applied='Harvard', program_applied='Politics', deadline=today,
+                date_created=today, date_updated=today, date_fulfilled=today, status=STATUS_REQUESTED).save()
+    # illegal status
+    with pytest.raises(ValidationError):
+        Request(student=john, instructor=joe, course=pl999,
+                school_applied='Harvard', program_applied='Politics', deadline=today,
+                date_created=today, date_updated=today, date_fulfilled=today, status=ILLEGAL_STATUS).save()
+    # School name too long
+    with pytest.raises(ValidationError):
+        Request(student=john, instructor=joe, course=pl999,
+                school_applied='Harvard' * 10, program_applied='Politics', deadline=today,
+                date_created=today, date_updated=today, date_fulfilled=today, status=STATUS_FULFILLED).save()
+    # Program name too long
+    with pytest.raises(ValidationError):
+        Request(student=john, instructor=joe, course=pl999,
+                school_applied='Harvard', program_applied='Politics' * 10, deadline=today,
+                date_created=today, date_updated=today, date_fulfilled=today, status=STATUS_FULFILLED).save()
