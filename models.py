@@ -18,9 +18,10 @@ from mongoengine import BooleanField
 from mongoengine import StringField
 from mongoengine import ValidationError
 
+
 class User(Document):
     email = EmailField(unique=True, required=True)
-    password = StringField(max_length=100, required=True)
+    password = StringField(max_length=1000, required=True)
     first_name = StringField(max_length=100, required=True)
     last_name = StringField(max_length=100, required=True)
     gender = StringField(regex='(M|F)', max_length=1, min_length=1)
