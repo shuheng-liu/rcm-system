@@ -51,7 +51,7 @@ class Instructor(User):
 
 
 class Staff(User):
-    full_access = BooleanField(default=False)
+    full_access = BooleanField(default=False, required=True)
     accessible_courses = ListField(ReferenceField('Course'))
 
 
