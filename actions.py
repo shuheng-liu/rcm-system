@@ -1,15 +1,25 @@
-from models import Student, Instructor, Staff
+from models import Student, Instructor, Staff, User
 from models import Course, Request
 from models import Message
+from passlib.hash import pbkdf2_sha256
+from err import ActionError
+
+USER_ROLLS = [Student, Instructor, Staff]
 
 
-def signup(email, password, first_name, last_name, gender=None, role=None):
-    # TODO verify `email` is not present in database
-    pass
-    # TODO hash `password`
-    pass
-    # TODO save to database
-    pass
+def signup(role, email, password, first_name, last_name, gender=None):
+    if role not in USER_ROLLS:
+        raise RuntimeError(f"Unknown roll: {role}")
+    # check for existing `email` in database
+    if role.objects(email=email).count() > 0:
+        raise ActionError(f"User {email} already exists")
+    # hash `password`
+    pwd_hash = pbkdf2_sha256.encrypt(password)
+    # save to database
+    user = role(email=email, password=pwd_hash, first_name=first_name, last_name=last_name)
+    if gender:
+        user.gender = gender
+    user.save()
 
 
 def signin(email, pwd_submitted, role=None):
