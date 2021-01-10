@@ -37,6 +37,7 @@ class RequestForCourse(EmbeddedDocument):
     course = ReferenceField('Course', required=True)
     requests_sent = ListField(ReferenceField('Request'))
     requests_quota = IntField(min_value=0, required=True)
+    recommender = ReferenceField('Instructor', required=True)
 
 
 class Student(User):
