@@ -34,19 +34,19 @@ class GenericUser(User):
 
 class RequestForCourse(EmbeddedDocument):
     course = ReferenceField('Course', required=True)
-    requests_sent = ListField(ReferenceField('Request'), default=list, required=True)
+    requests_sent = ListField(ReferenceField('Request'))
     requests_quota = IntField(min_value=0, required=True)
 
 
 class Student(User):
     gender = StringField(regex='(M|F)', max_length=1, min_length=1, required=True)
     aka = StringField(max_length=20)
-    req_for_courses = EmbeddedDocumentListField(RequestForCourse, default=list)
+    req_for_courses = EmbeddedDocumentListField(RequestForCourse)
 
 
 class Instructor(User):
-    courses = ListField(ReferenceField('Course'), default=list, required=True)
-    requests_received = ListField(ReferenceField('Request'), default=list, required=True)
+    courses = ListField(ReferenceField('Course'))
+    requests_received = ListField(ReferenceField('Request'))
 
 
 class Staff(User):
@@ -58,9 +58,9 @@ class Course(Document):
     course_name = StringField(max_length=1000)
     start_date = DateField(default=datetime.today, required=True)
     professor = ReferenceField(Instructor, required=True)
-    mentors = ListField(ReferenceField(Instructor), required=True, default=list)
+    mentors = ListField(ReferenceField(Instructor))
     coordinator = ReferenceField(Staff)
-    students = ListField(ReferenceField(Student), required=True, default=list)
+    students = ListField(ReferenceField(Student))
 
 
 class Message(EmbeddedDocument):
