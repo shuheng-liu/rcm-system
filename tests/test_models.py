@@ -1,5 +1,5 @@
 import pytest
-from datetime import date
+from datetime import date, datetime
 from mongoengine import connect
 from mongoengine import NotUniqueError
 from mongoengine import ValidationError
@@ -212,3 +212,32 @@ def test_request():
         Request(student=john, instructor=joe, course=pl999,
                 school_applied='Harvard', program_applied='Politics' * 10, deadline=today,
                 date_created=today, date_updated=today, date_fulfilled=today, status=STATUS_FULFILLED).save()
+
+    # TODO add test case for nonempty `messages`
+
+    clean_up()
+
+
+def test_message():
+    from models import Message
+    from models import Student, Instructor
+
+    # datetime
+    now = datetime.utcnow
+    # instructor & student
+    joe = Instructor(first_name='Joe', last_name='Biden', email='joe@biden.com', password='pwd').save()
+    john = Student(first_name='John', last_name='Doe', email='john@doe.com', password='pwd', gender='M').save()
+
+    # from student
+    Message(sender=john, content="Hello, Joe!", time=now()).validate()
+    # from instructor
+    Message(sender=joe, content="Hello, John!", time=now()).validate()
+    # w/o time
+    Message(sender=john, content="Hello, again!").validate()
+
+    # content too long
+    with pytest.raises(ValidationError):
+        Message(sender=joe, content="a"*501).validate()
+
+    clean_up()
+
