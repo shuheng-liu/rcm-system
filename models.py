@@ -18,7 +18,6 @@ from mongoengine import BooleanField
 from mongoengine import StringField
 from mongoengine import ValidationError
 
-
 class User(Document):
     email = EmailField(unique=True, required=True)
     password = StringField(max_length=100, required=True)
@@ -66,9 +65,9 @@ class Course(Document):
 
 
 class Message(EmbeddedDocument):
-    from_user = ReferenceField(User, required=True)
+    sender = ReferenceField(User, required=True)
     content = StringField(max_length=500, required=True)
-    timestamp = DateTimeField(default=datetime.utcnow, required=True)
+    time = DateTimeField(default=datetime.utcnow, required=True)
 
 
 STATUS_REQUESTED = 1000
