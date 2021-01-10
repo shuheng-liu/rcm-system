@@ -33,11 +33,13 @@ def signin(role, email, pwd_submitted):
     return user
 
 
-def change_password(role, user, old_password, password):
-    # TODO verify old password
-    pass
-    # TODO update password
-    pass
+def change_password(user, old_password, password):
+    # verify old password
+    if not pbkdf2_sha256.verify(old_password, user.password):
+        raise ActionError(f"Incorrect password")
+    # update password
+    user.password = pbkdf2_sha256.encrypt(password)
+    return user.save()
 
 
 def enroll(course, student):
