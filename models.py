@@ -71,15 +71,17 @@ class Message(EmbeddedDocument):
     timestamp = DateTimeField(default=datetime.utcnow, required=True)
 
 
-STATUS_REQUESTED = 100
-STATUS_EMAILED = 200
-STATUS_FULFILLED = 300
+STATUS_REQUESTED = 1000
+STATUS_EMAILED = 2000
+STATUS_DRAFTED = 3000
+STATUS_FULFILLED = 4000
 
 
 def _validate_request_status(status):
     if status not in [
         STATUS_REQUESTED,
         STATUS_EMAILED,
+        STATUS_DRAFTED,
         STATUS_FULFILLED,
     ]:
         raise ValidationError(f'Illegal Status: {status}')
