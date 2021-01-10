@@ -51,7 +51,7 @@ def test_instructor():
                courses=[]).save()
     Instructor(first_name='Kamala', last_name='Harris', email='kamala@harris.com', password='pwd', gender='F',
                requests_received=[]).save()
-    Instructor(first_name='Kamala', last_name='Harris', email='kamala@harris.com', password='pwd').save()
+    Instructor(first_name='Nancy', last_name='Pelosi', email='nancy@pelosi.com', password='pwd').save()
     # TODO add a nonempty `request_received` test case
     pass
 
