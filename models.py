@@ -96,6 +96,12 @@ class Request(Document):
     deadline = DateField(required=True)
     date_created = DateField(default=datetime.utcnow, required=True)
     date_updated = DateField(default=datetime.utcnow, required=True)
-    date_responded = DateField()
-    status = StringField(validation=_validate_request_status, required=True)
+    date_fulfilled = DateField()
+    status = IntField(validation=_validate_request_status, default=STATUS_REQUESTED, required=True)
     messages = EmbeddedDocumentListField(Message)
+
+    def clean(self):
+        if (self.date_fulfilled is None) and (self.status == STATUS_FULFILLED):
+            raise ValidationError('Request fulfilled but not specified when')
+        if (self.date_fulfilled is not None) and (self.status != STATUS_FULFILLED):
+            raise ValidationError('Request not fulfilled but date_fulfilled is set')
