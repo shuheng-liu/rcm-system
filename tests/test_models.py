@@ -241,3 +241,28 @@ def test_message():
 
     clean_up()
 
+
+def test_request_for_course():
+    from models import RequestForCourse
+    from models import Course, Instructor, Staff, Student
+    from models import Instructor
+
+    joe = Instructor(first_name='Joe', last_name='Biden', email='joe@biden.com', password='pwd').save()
+    pl999 = Course(code='PL999', course_name='US Presidency', professor=joe).save()
+
+    RequestForCourse(course=pl999, requests_quota=8, recommender=joe).validate()
+
+    # negative quota
+    with pytest.raises(ValidationError):
+        RequestForCourse(course=pl999, requests_quota=-1, recommender=joe).validate()
+    # missing quota
+    with pytest.raises(ValidationError):
+        RequestForCourse(course=pl999, recommender=joe).validate()
+    # missing recommender
+    with pytest.raises(ValidationError):
+        RequestForCourse(course=pl999, requests_quota=10).validate()
+    # missing course
+    with pytest.raises(ValidationError):
+        RequestForCourse(requests_quota=10, recommender=joe).validate()
+
+    clean_up()
