@@ -19,7 +19,7 @@ def signup(role, email, password, first_name, last_name, gender=None):
     user = role(email=email, password=pwd_hash, first_name=first_name, last_name=last_name)
     if gender:
         user.gender = gender
-    user.save()
+    return user.save()
 
 
 def signin(role, email, pwd_submitted):
