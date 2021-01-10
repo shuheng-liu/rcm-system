@@ -57,3 +57,18 @@ def test_instructor():
 
     # TODO add a nonempty `courses` test case
     pass
+
+
+def test_staff():
+    from models import Staff
+
+    Staff(first_name='Tony', last_name='Stark', email='tony@stark.com', password='pwd', gender='M',
+          full_access=True).save()
+
+    Staff(first_name='Pepper', last_name='Potts', email='pepper@potts.com', password='pwd', gender='F').save()
+
+    Staff(first_name='Morgan', last_name='Stark', email='morgan@stark.com', password='pwd', gender='F',
+          accessible_courses=[]).save()
+
+    # TODO add a nonempty `accessible_couress` test case
+    pass
