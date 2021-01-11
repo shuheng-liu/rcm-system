@@ -28,6 +28,11 @@ def random_user_info(length=5):
     return email, password, first_name, last_name, gender
 
 
+def reload(*documents):
+    for doc in documents:
+        doc.reload()
+
+
 def signup_random_user(role, length=5):
     from actions import signup
     eml, pwd, fn, ln, gnd = random_user_info(length=length)
@@ -197,3 +202,32 @@ def test_set_letter_quota():
         assert len(course.students) == 1
 
     clean_up()
+
+
+def test_reset_course_professor():
+    from actions import signup, new_course
+    from actions import reset_course_professor
+    from models import Instructor, Course
+    prof1 = signup_random_user(Instructor, length=5)
+    prof2 = signup_random_user(Instructor, length=6)
+
+    # create a new course and set professor
+    course = new_course(code='CS101', start_date=date.today(), course_name='Intro to CS', professor=prof1)
+    reload(prof1, prof2, course)
+    assert course.professor == prof1
+    assert course in prof1.courses
+    assert course not in prof2.courses
+
+    # reset to the same professor
+    reset_course_professor(course=course, professor=prof1)
+    reload(prof1, prof2, course)
+    assert course.professor == prof1
+    assert course in prof1.courses
+    assert course not in prof2.courses
+
+    # reset to another professor
+    reset_course_professor(course=course, professor=prof2)
+    reload(prof1, prof2, course)
+    assert course.professor == prof2
+    assert course not in prof1.courses
+    assert course in prof2.courses
