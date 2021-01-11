@@ -54,9 +54,7 @@ def set_letter_quota(student, recommender, course, quota, reset=False):
     if quota < 0:
         raise ValidationError(f"quota={quota} is too small.")
     # register `student` to `course` if necessary
-    if student not in course.students:
-        course.students.append(student)
-        course.save()
+    course.update(add_to_set__students=student)
 
     # register `course` to `student` if necessary. Check out the following documentation
     # 1) https://stackoverflow.com/a/50658375
