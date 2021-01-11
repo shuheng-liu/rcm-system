@@ -143,7 +143,7 @@ def test_new_course():
     clean_up()
 
 
-def test_assign_letter_quota():
+def test_set_letter_quota():
     from actions import signup, signin, new_course
     from actions import set_letter_quota
     from models import Student, Instructor, Course
