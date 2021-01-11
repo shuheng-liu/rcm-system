@@ -95,6 +95,12 @@ def assign_course_mentor(course, mentor):
     return course
 
 
+def withdraw_course_mentor(course, mentor, revoke_access=True):
+    course.update(pull__mentor=mentor)
+    if revoke_access:
+        mentor.update(pull__courses=course)
+
+
 def grant_access(staff, course):
     # TODO grant to `staff` the access to `course`
     pass
