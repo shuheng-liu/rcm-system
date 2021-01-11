@@ -4,7 +4,7 @@ import pytest
 from datetime import date, datetime
 from passlib.hash import pbkdf2_sha256
 from mongoengine import connect
-from mongoengine import ValidationError, NotUniqueError
+from mongoengine import ValidationError, NotUniqueError, DoesNotExist
 from err import ActionError
 
 # connect and initialize database
@@ -381,3 +381,107 @@ def test_revoke_access():
 
     clean_up()
 
+
+def test_make_request():
+    from actions import signup, new_course, set_letter_quota
+    from actions import make_request
+    from models import Instructor, Student
+    prof = signup_random_user(Instructor, length=5)
+    std = signup_random_user(Student, length=5)
+    today = date.today()
+    cs101 = new_course(code='CS101', start_date=today, course_name='Intro to CS', professor=prof)
+    pl102 = new_course(code='PL102', start_date=today, course_name='Politics', professor=prof)
+    reload(prof)
+
+    # assign 2 quota for (cs101, prof)
+    set_letter_quota(student=std, recommender=prof, course=cs101, quota=2)
+    # make a request, 1 quota remaining
+    req = make_request(
+        student=std,
+        instructor=prof,
+        course=cs101,
+        school_applied='UC',
+        program_applied='CS',
+        deadline=today,
+    )
+    reload(std, prof, req)
+    r4c = std.req_for_courses.filter(course=cs101).get()
+    assert len(r4c.requests_sent) == 1
+    assert r4c.requests_quota == 1
+    assert req in r4c.requests_sent
+    assert req in prof.requests_received
+    assert req.student == std
+    assert req.instructor == prof
+    assert req.course == cs101
+    assert req.school_applied == 'UC'
+    assert req.program_applied == 'CS'
+    assert req.deadline == today
+
+    # make another request, 0 quota remaining
+    req = make_request(
+        student=std,
+        instructor=prof,
+        course=cs101,
+        school_applied='UC2',
+        program_applied='CS2',
+        deadline=today,
+    )
+    reload(std, prof, req)
+    r4c = std.req_for_courses.filter(course=cs101).get()
+    assert len(r4c.requests_sent) == 2
+    assert r4c.requests_quota == 0
+    assert req in r4c.requests_sent
+    assert req in prof.requests_received
+    assert req.student == std
+    assert req.instructor == prof
+    assert req.course == cs101
+    assert req.school_applied == 'UC2'
+    assert req.program_applied == 'CS2'
+    assert req.deadline == today
+
+    # raises error because no quota remains
+    with pytest.raises(DoesNotExist):
+        make_request(
+            student=std,
+            instructor=prof,
+            course=cs101,
+            school_applied='UC2',
+            program_applied='CS2',
+            deadline=today,
+        )
+
+    # raises error because no quota assigned
+    with pytest.raises(DoesNotExist):
+        make_request(
+            student=std,
+            instructor=prof,
+            course=pl102,
+            school_applied='UC3',
+            program_applied='CS3',
+            deadline=today,
+        )
+
+    # assign 1 quota for (pl102, prof)
+    set_letter_quota(student=std, recommender=prof, course=pl102, quota=1)
+    req = make_request(
+        student=std,
+        instructor=prof,
+        course=pl102,
+        school_applied='Yale',
+        program_applied='Politics',
+        deadline=today,
+    )
+    reload(std, prof, req)
+    r4c = std.req_for_courses.filter(course=pl102).get()
+    assert len(r4c.requests_sent) == 1
+    assert r4c.requests_quota == 0
+    assert req in r4c.requests_sent
+    assert req in prof.requests_received
+    assert req.student == std
+    assert req.instructor == prof
+    assert req.course == pl102
+    assert req.school_applied == 'Yale'
+    assert req.program_applied == 'Politics'
+    assert req.deadline == today
+
+    clean_up()
