@@ -267,3 +267,28 @@ def test_set_course_coordinator():
     reload(course, coordinator1, coordinator2)
     assert course in coordinator1.accessible_courses
     assert course in coordinator2.accessible_courses
+
+    clean_up()
+
+
+def test_assign_course_mentor():
+    from actions import new_course
+    from actions import assign_course_mentor
+    from models import Instructor
+    prof = signup_random_user(Instructor, length=5)
+    mentor1 = signup_random_user(Instructor, length=6)
+    mentor2 = signup_random_user(Instructor, length=7)
+
+    course = new_course(code='CS101', start_date=date.today(), course_name='Intro to CS', professor=prof)
+    assign_course_mentor(course, mentor1)
+    assign_course_mentor(course, mentor1)
+    assign_course_mentor(course, mentor2)
+    reload(course, mentor1, mentor2)
+
+    assert len(course.mentors) == 2
+    assert mentor1 in course.mentors
+    assert mentor2 in course.mentors
+    assert course in mentor1.courses
+    assert course in mentor2.courses
+
+    clean_up()
