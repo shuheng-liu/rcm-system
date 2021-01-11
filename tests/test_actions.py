@@ -225,9 +225,16 @@ def test_reset_course_professor():
     assert course in prof1.courses
     assert course not in prof2.courses
 
-    # reset to another professor
+    # reset to another professor, after revoking original access
     reset_course_professor(course=course, professor=prof2)
     reload(prof1, prof2, course)
     assert course.professor == prof2
     assert course not in prof1.courses
+    assert course in prof2.courses
+
+    # reset to another professor, w/o revoking original access
+    reset_course_professor(course=course, professor=prof1, revoke_access=False)
+    reload(prof1, prof2, course)
+    assert course.professor == prof1
+    assert course in prof1.courses
     assert course in prof2.courses
