@@ -327,3 +327,29 @@ def test_withdraw_course_mentor():
     assert mentor2 not in course.mentors
     assert course in mentor1.courses
     assert course not in mentor2.courses
+
+
+def test_grant_access():
+    from actions import new_course
+    from actions import grant_access
+    from models import Instructor, Staff
+
+    prof = signup_random_user(Instructor, length=5)
+    staff = signup_random_user(Staff, length=5)
+
+    cs101 = new_course(code='CS101', start_date=date.today(), course_name='Intro to CS', professor=prof)
+    grant_access(staff=staff, course=cs101)
+    reload(staff, cs101)
+    assert cs101 in staff.accessible_courses
+
+    pl102 = new_course(code='PL102', start_date=date.today(), course_name='Politics', professor=prof)
+    grant_access(staff=staff, course=pl102)
+    reload(staff, cs101, pl102)
+    assert pl102 in staff.accessible_courses
+
+    # grant the first course again, there shouldn't be duplicate
+    grant_access(staff=staff, course=cs101)
+    reload(staff, cs101, pl102)
+    assert len(staff.accessible_courses) == 2
+
+
