@@ -108,6 +108,12 @@ def grant_access(staff, course):
     return staff
 
 
+def revoke_access(staff, course):
+    # revoke access to `course` from `staff
+    staff.update(pull__accessible_courses=course)
+    return staff
+
+
 def make_request(student, instructor, course, school_applied, program_applied, deadline):
     # TODO make a `request`
     pass
