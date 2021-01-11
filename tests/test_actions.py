@@ -1,6 +1,7 @@
 import string
 import random
 import pytest
+from datetime import date, datetime
 from passlib.hash import pbkdf2_sha256
 from mongoengine import connect
 from mongoengine import ValidationError, NotUniqueError
@@ -25,6 +26,12 @@ def random_user_info(length=5):
     last_name = rstr(length * 2)
     gender = random.choice("FM")
     return email, password, first_name, last_name, gender
+
+
+def signup_random_user(role, length=5):
+    from actions import signup
+    eml, pwd, fn, ln, gnd = random_user_info(length=length)
+    return signup(role, email=eml, password=pwd, first_name=fn, last_name=ln, gender=gnd)
 
 
 def test_signup():
@@ -108,4 +115,23 @@ def test_change_password():
     clean_up()
 
 
+def test_new_course():
+    from actions import signup, signin
+    from actions import new_course
+    from models import Instructor
+    prof = signup_random_user(Instructor, length=5)
+    new_course(code='CS101', start_date=date.today(), course_name='Intro to CS', professor=prof)
+    # duplicate course name is fine
+    new_course(code='CS102', start_date=date.today(), course_name='Intro to CS', professor=prof)
 
+    # duplicate course code results in error
+    with pytest.raises(NotUniqueError):
+        new_course(code='CS101', start_date=date.today(), course_name='Intro to CS2', professor=prof)
+    # course code too long
+    with pytest.raises(ValidationError):
+        new_course(code='C' * 16, start_date=date.today(), course_name='Intro to CS2', professor=prof)
+    # course name too long
+    with pytest.raises(ValidationError):
+        new_course(code='CS103', start_date=date.today(), course_name='a' * 1001, professor=prof)
+
+    clean_up()
