@@ -1,9 +1,11 @@
+from datetime import date, datetime
 from models import Student, Instructor, Staff, User
 from models import Course, Request
 from models import RequestForCourse
 from models import Message
+from models import STATUS_REQUESTED, STATUS_EMAILED, STATUS_DRAFTED, STATUS_FULFILLED
 from passlib.hash import pbkdf2_sha256
-from mongoengine import ValidationError
+from mongoengine import ValidationError, DoesNotExist
 from err import ActionError
 
 USER_ROLLS = [Student, Instructor, Staff]
@@ -114,13 +116,39 @@ def revoke_access(staff, course):
     return staff
 
 
-def make_request(student, instructor, course, school_applied, program_applied, deadline):
-    # TODO make a `request`
-    pass
-    # TODO register `request` to `student`
-    pass
-    # TODO register `request` to `instructor`
-    pass
+def make_request(student, instructor, course, school_applied, program_applied, deadline, date_created=None,
+                 date_updated=None, status=STATUS_REQUESTED):
+    # make a request
+    req = Request(
+        student=student,
+        instructor=instructor,
+        course=course,
+        school_applied=school_applied,
+        program_applied=program_applied,
+        deadline=deadline,
+        date_created=date_created if date_created else date.today(),
+        date_updated=date_updated if date_updated else date.today(),
+        status=status,
+    ).save()
+    # register request to student
+
+    # Unfortunately the following is not supported
+    # student.req_for_courses.\
+    #     filter(course=course, recommender=instructor, requests_quota__gte=0).\
+    #     update(dec__requests_quota=1, push__requests_sent=req)
+
+    # HACK, the following is not thread-safe
+    r4c = student.req_for_courses.filter(course=course, recommender=instructor).get()
+    if r4c.requests_quota <= 0:
+        raise DoesNotExist(f"Student {student} has no remaining quota for course {course}")
+    r4c.requests_quota -= 1
+    r4c.requests_sent.append(req)
+    student.save()
+
+    # register `request` to `instructor`
+    instructor.update(push__requests_received=req)
+
+    return req
 
 
 def update_request(request, student=None, instructor=None, course=None, school_applied=None, program_applied=None,
