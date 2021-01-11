@@ -50,8 +50,7 @@ def enroll(course, student):
 
 
 def new_course(code, start_date, course_name, professor):
-    # TODO instantiate a new course
-    pass
+    return Course(code=code, start_date=start_date, course_name=course_name, professor=professor).save()
 
 
 def set_professor(instructor, course):
