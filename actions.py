@@ -76,6 +76,7 @@ def reset_course_professor(course, professor, revoke_access=True):
         course.professor.update(pull__courses=course)
     course.update(set__professor=professor)
     professor.update(add_to_set__courses=course)
+    return course
 
 
 def set_course_coordinator(course, coordinator, revoke_access=True):
@@ -85,6 +86,7 @@ def set_course_coordinator(course, coordinator, revoke_access=True):
     # set `course.coordinator` as `staff`
     course.update(set__coordinator=coordinator)
     coordinator.update(add_to_set__accessible_courses=course)
+    return course
 
 
 def append_mentor(instructor, course):
