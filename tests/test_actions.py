@@ -135,3 +135,59 @@ def test_new_course():
         new_course(code='CS103', start_date=date.today(), course_name='a' * 1001, professor=prof)
 
     clean_up()
+
+
+def test_assign_letter_quota():
+    from actions import signup, signin, new_course
+    from actions import set_letter_quota
+    from models import Student, Instructor, Course
+
+    std = signup_random_user(Student, length=5)
+    prof1 = signup_random_user(Instructor, length=6)
+    prof2 = signup_random_user(Instructor, length=7)
+    cs101 = new_course(code='CS101', start_date=date.today(), course_name='Intro to CS', professor=prof1)
+    pl102 = new_course(code='PL102', start_date=date.today(), course_name='Politics', professor=prof2)
+
+    # set quota for (cs101, prof1) for the first time
+    set_letter_quota(student=std, recommender=prof1, course=cs101, quota=10)
+    std_db = Student.objects.first()
+    course = Course.objects(code='CS101').first()
+    assert std_db.req_for_courses.count() == 1
+    assert std_db.req_for_courses.first().recommender == prof1
+    assert std_db.req_for_courses.first().course == cs101
+    assert std_db.req_for_courses.first().requests_quota == 10
+    assert len(course.students) == 1
+
+    # force reset quota for (cs101, prof1)
+    set_letter_quota(student=std, recommender=prof1, course=cs101, quota=20, reset=True)
+    std_db = Student.objects.first()
+    assert std_db.req_for_courses.count() == 1
+    assert std_db.req_for_courses.first().recommender == prof1
+    assert std_db.req_for_courses.first().course == cs101
+    assert std_db.req_for_courses.first().requests_quota == 20
+
+    # reset quota for (cs101, prof1) without explicit allowing reset, even under the same quota
+    with pytest.raises(ActionError):
+        set_letter_quota(student=std, recommender=prof1, course=cs101, quota=20)
+
+    # negative quota (reset)
+    with pytest.raises(ValidationError):
+        set_letter_quota(student=std, recommender=prof1, course=cs101, quota=-10, reset=True)
+    # negative quota (set for the first time)
+    with pytest.raises(ValidationError):
+        set_letter_quota(student=std, recommender=prof2, course=pl102, quota=-20)
+
+    # set quota for (cs101, prof2), req_for_courses.count() changes to 2
+    set_letter_quota(student=std, recommender=prof2, course=cs101, quota=30)
+    # set quota for (pl102, prof1), req_for_courses.count() changes to 3
+    set_letter_quota(student=std, recommender=prof1, course=pl102, quota=40)
+    # set quota for (pl102, prof2), req_for_courses.count() changes to 4
+    set_letter_quota(student=std, recommender=prof2, course=pl102, quota=50)
+
+    std_db = Student.objects.first()
+    assert std_db.req_for_courses.count() == 4
+
+    for course in Course.objects:
+        assert len(course.students) == 1
+
+    clean_up()
