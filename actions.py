@@ -96,7 +96,7 @@ def assign_course_mentor(course, mentor):
 
 
 def withdraw_course_mentor(course, mentor, revoke_access=True):
-    course.update(pull__mentor=mentor)
+    course.update(pull__mentors=mentor)
     if revoke_access:
         mentor.update(pull__courses=course)
     return course
