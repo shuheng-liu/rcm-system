@@ -67,7 +67,7 @@ def set_letter_quota(student, recommender, course, quota, reset=False):
     else:
         raise ActionError(f"Letter quota already assigned to {recommender} for {course} exists")
 
-    student.save()
+    return student.save()
 
 
 def reset_course_professor(course, professor, revoke_access=True):
