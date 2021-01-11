@@ -246,7 +246,7 @@ def test_set_course_coordinator():
     from models import Instructor, Course, Staff
     prof = signup_random_user(Instructor, length=5)
     coordinator1 = signup_random_user(Staff, length=5)
-    coordinator2 = signup_random_user(Staff, length=5)
+    coordinator2 = signup_random_user(Staff, length=6)
 
     # create a new course and set coordinator
     course = new_course(code='CS101', start_date=date.today(), course_name='Intro to CS', professor=prof)
