@@ -45,7 +45,9 @@ def change_password(user, old_password, password):
 
 
 def new_course(code, start_date, course_name, professor):
-    return Course(code=code, start_date=start_date, course_name=course_name, professor=professor).save()
+    course = Course(code=code, start_date=start_date, course_name=course_name, professor=professor).save()
+    professor.update(add_to_set__courses=course)
+    return course
 
 
 def set_letter_quota(student, recommender, course, quota, reset=False):
