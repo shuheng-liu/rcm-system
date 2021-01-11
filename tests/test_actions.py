@@ -238,3 +238,32 @@ def test_reset_course_professor():
     assert course.professor == prof1
     assert course in prof1.courses
     assert course in prof2.courses
+
+
+def test_set_course_coordinator():
+    from actions import signup, new_course
+    from actions import set_course_coordinator
+    from models import Instructor, Course, Staff
+    prof = signup_random_user(Instructor, length=5)
+    coordinator1 = signup_random_user(Staff, length=5)
+    coordinator2 = signup_random_user(Staff, length=5)
+
+    # create a new course and set coordinator
+    course = new_course(code='CS101', start_date=date.today(), course_name='Intro to CS', professor=prof)
+    set_course_coordinator(course, coordinator1)
+    reload(course, coordinator1, coordinator2)
+    assert course.coordinator == coordinator1
+    assert course in coordinator1.accessible_courses
+    assert course not in coordinator2.accessible_courses
+
+    # reset to another coordinator, revoking access from previous coordinator
+    set_course_coordinator(course, coordinator2)
+    reload(course, coordinator1, coordinator2)
+    assert course not in coordinator1.accessible_courses
+    assert course in coordinator2.accessible_courses
+
+    # reset to another coordinator, w/o revoking access from previous coordinator
+    set_course_coordinator(course, coordinator1, revoke_access=False)
+    reload(course, coordinator1, coordinator2)
+    assert course in coordinator1.accessible_courses
+    assert course in coordinator2.accessible_courses
