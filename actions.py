@@ -70,8 +70,9 @@ def set_letter_quota(student, recommender, course, quota, reset=False):
     student.save()
 
 
-def reset_course_professor(course, professor):
-    # remove original professor's access to course
+def reset_course_professor(course, professor, revoke_access=True):
+    # revoke access to course from original professor
+    if revoke_access:
     course.professor.update(pull__courses=course)
     course.update(set__professor=professor)
     professor.update(add_to_set__courses=course)
