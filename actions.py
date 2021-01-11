@@ -70,9 +70,11 @@ def set_letter_quota(student, recommender, course, quota, reset=False):
     student.save()
 
 
-def set_professor(instructor, course):
-    # TODO set `course.professor` as `instructor`
-    pass
+def reset_course_professor(course, professor):
+    # remove original professor's access to course
+    course.professor.update(pull__courses=course)
+    course.update(set__professor=professor)
+    professor.update(add_to_set__courses=course)
 
 
 def set_coordinator(staff, course):
