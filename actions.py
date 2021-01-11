@@ -73,14 +73,18 @@ def set_letter_quota(student, recommender, course, quota, reset=False):
 def reset_course_professor(course, professor, revoke_access=True):
     # revoke access to course from original professor
     if revoke_access:
-    course.professor.update(pull__courses=course)
+        course.professor.update(pull__courses=course)
     course.update(set__professor=professor)
     professor.update(add_to_set__courses=course)
 
 
-def set_coordinator(staff, course):
-    # TODO set `course.coordinator` as `staff`
-    pass
+def set_course_coordinator(course, coordinator, revoke_access=True):
+    # revoke access to course from original coordinator
+    if revoke_access and course.coordinator is not None:
+        course.coordinator.update(pull__accessible_courses=course)
+    # set `course.coordinator` as `staff`
+    course.update(set__coordinator=coordinator)
+    coordinator.update(add_to_set__accessible_courses=course)
 
 
 def append_mentor(instructor, course):
