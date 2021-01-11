@@ -99,6 +99,7 @@ def withdraw_course_mentor(course, mentor, revoke_access=True):
     course.update(pull__mentor=mentor)
     if revoke_access:
         mentor.update(pull__courses=course)
+    return course
 
 
 def grant_access(staff, course):
