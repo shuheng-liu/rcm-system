@@ -356,3 +356,28 @@ def test_grant_access():
 
     clean_up()
 
+
+def test_revoke_access():
+    from actions import new_course, grant_access
+    from actions import revoke_access
+    from models import Instructor, Staff
+
+    prof = signup_random_user(Instructor, length=5)
+    staff = signup_random_user(Staff, length=5)
+    cs101 = new_course(code='CS101', start_date=date.today(), course_name='Intro to CS', professor=prof)
+    pl102 = new_course(code='PL102', start_date=date.today(), course_name='Politics', professor=prof)
+    grant_access(staff=staff, course=cs101)
+    grant_access(staff=staff, course=cs101)
+    grant_access(staff=staff, course=pl102)
+
+    revoke_access(staff=staff, course=cs101)
+    reload(staff, cs101, pl102)
+    assert cs101 not in staff.accessible_courses
+    assert pl102 in staff.accessible_courses
+    revoke_access(staff=staff, course=pl102)
+    reload(staff, cs101, pl102)
+    assert cs101 not in staff.accessible_courses
+    assert pl102 not in staff.accessible_courses
+
+    clean_up()
+
