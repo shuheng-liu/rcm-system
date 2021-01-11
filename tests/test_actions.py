@@ -292,3 +292,38 @@ def test_assign_course_mentor():
     assert course in mentor2.courses
 
     clean_up()
+
+
+def test_withdraw_course_mentor():
+    from actions import new_course
+    from actions import withdraw_course_mentor
+    from models import Instructor
+
+    prof = signup_random_user(Instructor, length=5)
+    mentor1 = signup_random_user(Instructor, length=6)
+
+    course = new_course(code='CS101', start_date=date.today(), course_name='Intro to CS', professor=prof)
+    assign_course_mentor(course, mentor1)
+    withdraw_course_mentor(course, mentor1)
+    update(course, mentor1)
+    assert mentor1 not in course.mentors
+    assert course not in mentor1.courses
+
+    # withdraw the same mentor twice
+    mentor2 = signup_random_user(Instructor, length=7)
+    assign_course_mentor(course, mentor1)
+    assign_course_mentor(course, mentor2)
+    # w/o revoking access
+    withdraw_course_mentor(course, mentor2, revoke_access=False)
+    update(course, mentor1, mentor2)
+    assert mentor1 in course.mentors
+    assert mentor2 not in course.mentors
+    assert course in mentor1.courses
+    assert course in mentor2.courses
+    # revoking access
+    withdraw_course_mentor(course, mentor2, revoke_access=True)
+    update(course, mentor1, mentor2)
+    assert mentor1 in course.mentors
+    assert mentor2 not in course.mentors
+    assert course in mentor1.courses
+    assert course not in mentor2.courses
