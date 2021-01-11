@@ -1,7 +1,9 @@
 from models import Student, Instructor, Staff, User
 from models import Course, Request
+from models import RequestForCourse
 from models import Message
 from passlib.hash import pbkdf2_sha256
+from mongoengine import ValidationError
 from err import ActionError
 
 USER_ROLLS = [Student, Instructor, Staff]
@@ -42,15 +44,30 @@ def change_password(user, old_password, password):
     return user.save()
 
 
-def enroll(course, student):
-    # TODO register `student` to `course`
-    pass
-    # TODO register `course` to `student`
-    pass
-
-
 def new_course(code, start_date, course_name, professor):
     return Course(code=code, start_date=start_date, course_name=course_name, professor=professor).save()
+
+
+def set_letter_quota(student, recommender, course, quota, reset=False):
+    if quota < 0:
+        raise ValidationError(f"quota={quota} is too small.")
+    # register `student` to `course` if necessary
+    if student not in course.students:
+        course.students.append(student)
+        course.save()
+
+    # register `course` to `student` if necessary. Check out the following documentation
+    # 1) https://stackoverflow.com/a/50658375
+    # 2) https://docs.mongoengine.org/apireference.html#mongoengine.base.datastructures.EmbeddedDocumentList
+    req_for_course = student.req_for_courses.filter(course=course, recommender=recommender)
+    if req_for_course.count() == 0:
+        student.req_for_courses.create(course=course, recommender=recommender, requests_quota=quota)
+    elif reset:
+        req_for_course.update(requests_quota=quota)
+    else:
+        raise ActionError(f"Letter quota already assigned to {recommender} for {course} exists")
+
+    student.save()
 
 
 def set_professor(instructor, course):
