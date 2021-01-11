@@ -89,9 +89,10 @@ def set_course_coordinator(course, coordinator, revoke_access=True):
     return course
 
 
-def append_mentor(instructor, course):
-    # TODO check whether `instructor` exists in `course.mentor` first
-    pass
+def assign_course_mentor(course, mentor):
+    course.update(add_to_set__mentors=mentor)
+    mentor.update(add_to_set__courses=course)
+    return course
 
 
 def grant_access(staff, course):
