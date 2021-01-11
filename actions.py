@@ -103,8 +103,9 @@ def withdraw_course_mentor(course, mentor, revoke_access=True):
 
 
 def grant_access(staff, course):
-    # TODO grant to `staff` the access to `course`
-    pass
+    # grant to `staff` the access to `course`
+    staff.update(add_to_set__accessible_courses=course)
+    return staff
 
 
 def make_request(student, instructor, course, school_applied, program_applied, deadline):
