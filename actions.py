@@ -14,7 +14,7 @@ def signup(role, email, password, first_name, last_name, gender=None):
     if role.objects(email=email).count() > 0:
         raise ActionError(f"User {email} already exists")
     # hash `password`
-    pwd_hash = pbkdf2_sha256.encrypt(password)
+    pwd_hash = pbkdf2_sha256.hash(password)
     # save to database
     user = role(email=email, password=pwd_hash, first_name=first_name, last_name=last_name)
     if gender:
@@ -38,7 +38,7 @@ def change_password(user, old_password, password):
     if not pbkdf2_sha256.verify(old_password, user.password):
         raise ActionError(f"Incorrect password")
     # update password
-    user.password = pbkdf2_sha256.encrypt(password)
+    user.password = pbkdf2_sha256.hash(password)
     return user.save()
 
 
