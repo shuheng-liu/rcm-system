@@ -120,9 +120,15 @@ def test_new_course():
     from actions import new_course
     from models import Instructor
     prof = signup_random_user(Instructor, length=5)
-    new_course(code='CS101', start_date=date.today(), course_name='Intro to CS', professor=prof)
+    cs101 = new_course(code='CS101', start_date=date.today(), course_name='Intro to CS', professor=prof)
+    prof.reload()
+    assert cs101 in prof.courses
+    assert cs101.professor == prof
     # duplicate course name is fine
-    new_course(code='CS102', start_date=date.today(), course_name='Intro to CS', professor=prof)
+    cs102 = new_course(code='CS102', start_date=date.today(), course_name='Intro to CS', professor=prof)
+    prof.reload()
+    assert cs102 in prof.courses
+    assert cs102.professor == prof
 
     # duplicate course code results in error
     with pytest.raises(NotUniqueError):
