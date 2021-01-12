@@ -507,6 +507,23 @@ def test_withdraw_request():
     assert len(prof.requests_received) == 0
 
     # withdraw a non-existent request
+    with pytest.raises(DoesNotExist):
+        withdraw_request(student=std, request=req)
+
+    # withdraw a fulfilled request
+    req_fulfilled = make_request(student=std, instructor=prof, course=cs101, school_applied='UC',
+                                 program_applied='CS', deadline=today)
+    req_fulfilled.date_fulfilled = today
+    req_fulfilled.status = STATUS_FULFILLED
+    req_fulfilled.save()
+    reload(std, prof)
+    assert len(std.req_for_courses.get().requests_sent) == 1
+    assert std.req_for_courses.get().requests_quota == 1
+    assert len(prof.requests_received) == 1
+    with pytest.raises(ActionError):
+        withdraw_request(student=std, request=req_fulfilled)
+
+    # withdraw an unrelated request
     std2 = signup_random_user(Student, length=6)
     prof2 = signup_random_user(Instructor, length=6)
     pl102 = new_course(code='PL102', start_date=today, course_name='Politics', professor=prof2)
@@ -518,16 +535,16 @@ def test_withdraw_request():
     reload(std, std2, prof, prof2)
 
     # removing a request not attached to the student shouldn't delete the request
-    assert Request.objects.count() == 1
+    assert Request.objects.count() == 2
     assert len(std2.req_for_courses.get().requests_sent) == 1
     assert req2 in std2.req_for_courses.get().requests_sent
     assert std2.req_for_courses.get().requests_quota == 1
     assert len(prof2.requests_received) == 1
 
     # and it shouldn't affect other students/staffs
-    assert len(std.req_for_courses.get().requests_sent) == 0
-    assert std.req_for_courses.get().requests_quota == 2
-    assert len(prof.requests_received) == 0
+    assert len(std.req_for_courses.get().requests_sent) == 1
+    assert std.req_for_courses.get().requests_quota == 1
+    assert len(prof.requests_received) == 1
 
     clean_up()
 
