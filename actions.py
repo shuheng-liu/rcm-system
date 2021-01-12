@@ -183,14 +183,13 @@ def fulfill_request(instructor, request, when=None):
     request.update(set__status=STATUS_FULFILLED, set__date_fulfilled=when or date.today())
     return request
 
+
+def unfulfill_request(instructor, request):
     if request not in instructor.requests_received:
         raise DoesNotExist(f'{request} has not been received by {instructor} or has been revoked')
-    # mark `request.status` as `STATUS_FULFILLED`
-    if not when:
-        when = date.today()
-    request.status = STATUS_FULFILLED
-    request.date_fulfilled = when
-    request.save()
+    if request.status != STATUS_FULFILLED:
+        raise ActionError(f'{request} not yet fulfilled')
+    request.update(set__status=STATUS_UNFULFILLED, unset__date_fulfilled=True)
     return request
 
 
