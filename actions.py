@@ -162,10 +162,13 @@ def withdraw_request(student, request):
         raise DoesNotExist(f"Request {request} doesn't exist")
 
 
-def send_msg(sender, content, request):
-    # TODO construct a `Message` document
-    pass
-    # TODO append to `request` Document
+def send_msg(sender, content, request, time=None):
+    # construct a `Message` document
+    if time is None:
+        time = datetime.utcnow()
+    msg = Message(sender=sender, content=content, time=time)
+    # append to `request` Document
+    request.update(push__messages=msg)
 
 
 def fulfill_request(instructor, request):
