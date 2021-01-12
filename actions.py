@@ -171,11 +171,21 @@ def send_msg(sender, content, request, time=None):
     msg = Message(sender=sender, content=content, time=time)
     # append to `request` Document
     request.update(push__messages=msg)
+    return msg
 
 
-def fulfill_request(instructor, request):
-    # TODO mark `request.status` as `STATUS_FULFILLED`
-    pass
+def fulfill_request(instructor, request, when=None):
+    if request.status == STATUS_FULFILLED:
+        raise ActionError(f'{request} already fulfilled')
+    if request not in instructor.requests_received:
+        raise DoesNotExist(f'{request} has not been received by {instructor} or has been revoked')
+    # mark `request.status` as `STATUS_FULFILLED`
+    if not when:
+        when = date.today()
+    request.status = STATUS_FULFILLED
+    request.date_fulfilled = when
+    request.save()
+    return request
 
 
 def view_requests(staff, by=None, vals=None):
