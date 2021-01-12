@@ -154,6 +154,8 @@ def make_request(student, instructor, course, school_applied, program_applied, d
 def withdraw_request(student, request):
     r4c = student.req_for_courses.filter(course=request.course, recommender=request.instructor).get()
     if request in r4c.requests_sent:
+        if request.status == STATUS_FULFILLED:
+            raise ActionError("This request has been fulfilled")
         r4c.requests_sent.remove(request)
         r4c.requests_quota += 1
         student.save()
