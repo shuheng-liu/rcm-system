@@ -1,7 +1,7 @@
 import string
 import random
 import pytest
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from passlib.hash import pbkdf2_sha256
 from mongoengine import connect
 from mongoengine import ValidationError, NotUniqueError, DoesNotExist
@@ -572,3 +572,42 @@ def test_send_msg():
     req.reload()
     msg = req.messages.filter(sender='Anonymous').get()
     assert msg.content == 'Hello, there.'
+
+    clean_up()
+
+
+def test_fulfill_request():
+    from actions import signup, new_course, set_letter_quota, make_request
+    from actions import fulfill_request
+    from models import Instructor, Student
+    prof1 = signup_random_user(Instructor, length=5)
+    prof2 = signup_random_user(Instructor, length=6)
+    std = signup_random_user(Student, length=5)
+    today = date.today()
+    cs101 = new_course(code='CS101', start_date=today, course_name='Intro to CS', professor=prof1)
+    pl101 = new_course(code='PL101', start_date=today, course_name='Politics', professor=prof2)
+    set_letter_quota(student=std, recommender=prof1, course=cs101, quota=2)
+    req = make_request(student=std, instructor=prof1, course=cs101, school_applied='UC', program_applied='CS',
+                       deadline=today)
+    reload(std, prof1, req)
+
+    # fulfill non-related request
+    with pytest.raises(DoesNotExist):
+        req = fulfill_request(instructor=prof2, request=req)
+    # fulfill a request
+    req = fulfill_request(instructor=prof1, request=req)
+    # fulfill a fulfilled request
+    with pytest.raises(ActionError):
+        fulfill_request(instructor=prof1, request=req)
+    # fulfill a request with specific date
+
+    tomorrow = today + timedelta(days=1)
+    set_letter_quota(student=std, recommender=prof2, course=pl101, quota=2)
+    req = make_request(student=std, instructor=prof2, course=pl101, school_applied='UC2', program_applied='CS2',
+                       deadline=today)
+    reload(std, prof2, req)
+    req = fulfill_request(instructor=prof2, request=req, when=tomorrow)
+    reload(std, prof2, req)
+    assert req.date_fulfilled == tomorrow
+
+    clean_up()
