@@ -3,7 +3,7 @@ from models import Student, Instructor, Staff, User
 from models import Course, Request
 from models import RequestForCourse
 from models import Message
-from models import STATUS_REQUESTED, STATUS_EMAILED, STATUS_DRAFTED, STATUS_FULFILLED
+from models import STATUS_REQUESTED, STATUS_EMAILED, STATUS_UNFULFILLED, STATUS_FULFILLED
 from passlib.hash import pbkdf2_sha256
 from mongoengine import ValidationError, DoesNotExist
 from err import ActionError

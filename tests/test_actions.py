@@ -517,7 +517,8 @@ def test_withdraw_request():
     from actions import signup, new_course, set_letter_quota, make_request
     from actions import withdraw_request
     from models import Instructor, Student, Request
-    from models import STATUS_EMAILED, STATUS_REQUESTED, STATUS_DRAFTED, STATUS_FULFILLED
+    from models import STATUS_EMAILED, STATUS_REQUESTED, STATUS_UNFULFILLED, STATUS_FULFILLED
+
     clean_up()
 
     prof = signup_random_user(Instructor, length=5)
@@ -581,7 +582,7 @@ def test_send_msg():
     from actions import signup, new_course, set_letter_quota, make_request
     from actions import send_msg
     from models import Instructor, Student, Request
-    from models import STATUS_EMAILED, STATUS_REQUESTED, STATUS_DRAFTED, STATUS_FULFILLED
+    from models import STATUS_EMAILED, STATUS_REQUESTED, STATUS_UNFULFILLED, STATUS_FULFILLED
 
     clean_up()
 

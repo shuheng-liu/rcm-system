@@ -132,7 +132,7 @@ def test_course():
 def test_request():
     from models import Student, Instructor, Course
     from models import Request
-    from models import STATUS_REQUESTED, STATUS_EMAILED, STATUS_DRAFTED, STATUS_FULFILLED
+    from models import STATUS_REQUESTED, STATUS_EMAILED, STATUS_UNFULFILLED, STATUS_FULFILLED
 
     ILLEGAL_STATUS = 1234
 
@@ -155,7 +155,7 @@ def test_request():
     # w/o date_fulfilled
     Request(student=john, instructor=joe, course=pl999,
             school_applied='Harvard', program_applied='Politics', deadline=today,
-            date_created=today, date_updated=today, status=STATUS_DRAFTED).save()
+            date_created=today, date_updated=today, status=STATUS_UNFULFILLED).save()
 
     # w/o student
     with pytest.raises(ValidationError):

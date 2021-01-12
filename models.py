@@ -79,7 +79,7 @@ class Message(EmbeddedDocument):
 
 STATUS_REQUESTED = 1000
 STATUS_EMAILED = 2000
-STATUS_DRAFTED = 3000
+STATUS_UNFULFILLED = 3000
 STATUS_FULFILLED = 4000
 
 
@@ -87,7 +87,7 @@ def _validate_request_status(status):
     if status not in [
         STATUS_REQUESTED,
         STATUS_EMAILED,
-        STATUS_DRAFTED,
+        STATUS_UNFULFILLED,
         STATUS_FULFILLED,
     ]:
         raise ValidationError(f'Illegal Status: {status}')
