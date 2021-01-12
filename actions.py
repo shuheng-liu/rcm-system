@@ -175,8 +175,14 @@ def send_msg(sender, content, request, time=None):
 
 
 def fulfill_request(instructor, request, when=None):
+    if request not in instructor.requests_received:
+        raise DoesNotExist(f'{request} has not been received by {instructor} or has been revoked')
     if request.status == STATUS_FULFILLED:
         raise ActionError(f'{request} already fulfilled')
+    # mark `request.status` as `STATUS_FULFILLED`
+    request.update(set__status=STATUS_FULFILLED, set__date_fulfilled=when or date.today())
+    return request
+
     if request not in instructor.requests_received:
         raise DoesNotExist(f'{request} has not been received by {instructor} or has been revoked')
     # mark `request.status` as `STATUS_FULFILLED`

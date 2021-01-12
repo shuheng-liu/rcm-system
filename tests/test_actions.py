@@ -15,9 +15,6 @@ def clean_up(db=db):
     db.drop_database('rcm-test-db')
 
 
-clean_up()
-
-
 def random_user_info(length=5):
     rstr = lambda n: ''.join(random.choice(string.ascii_letters) for _ in range(n))
     email = rstr(length) + "@" + rstr(length) + ".com"
@@ -42,6 +39,8 @@ def signup_random_user(role, length=5):
 def test_signup():
     from actions import signup
     from models import Student, Instructor, Staff
+
+    clean_up()
 
     for role in [Student, Instructor, Staff]:
         signup(role=role, email='john@doe.com', password='pwd', first_name='John', last_name='Doe', gender='M')
@@ -77,6 +76,8 @@ def test_signin():
     from actions import signin
     from models import Student, Instructor, Staff
 
+    clean_up()
+
     for role in [Student, Instructor, Staff]:
         eml, pwd, fn, ln, gnd = random_user_info(length=5)
         signup(role=role, email=eml, password=pwd, first_name=fn, last_name=ln, gender=gnd)
@@ -102,6 +103,8 @@ def test_change_password():
     from actions import change_password
     from models import Student, Instructor, Staff
 
+    clean_up()
+
     for role in [Student, Instructor, Staff]:
         eml, pwd, fn, ln, gnd = random_user_info(length=5)
         _, pwd2, _, _, _ = random_user_info(length=6)
@@ -124,6 +127,9 @@ def test_new_course():
     from actions import signup, signin
     from actions import new_course
     from models import Instructor
+
+    clean_up()
+
     prof = signup_random_user(Instructor, length=5)
     cs101 = new_course(code='CS101', start_date=date.today(), course_name='Intro to CS', professor=prof)
     prof.reload()
@@ -152,6 +158,8 @@ def test_set_letter_quota():
     from actions import signup, signin, new_course
     from actions import set_letter_quota
     from models import Student, Instructor, Course
+
+    clean_up()
 
     std = signup_random_user(Student, length=5)
     prof1 = signup_random_user(Instructor, length=6)
@@ -208,6 +216,9 @@ def test_reset_course_professor():
     from actions import signup, new_course
     from actions import reset_course_professor
     from models import Instructor, Course
+
+    clean_up()
+
     prof1 = signup_random_user(Instructor, length=5)
     prof2 = signup_random_user(Instructor, length=6)
 
@@ -244,6 +255,9 @@ def test_set_course_coordinator():
     from actions import signup, new_course
     from actions import set_course_coordinator
     from models import Instructor, Course, Staff
+
+    clean_up()
+
     prof = signup_random_user(Instructor, length=5)
     coordinator1 = signup_random_user(Staff, length=5)
     coordinator2 = signup_random_user(Staff, length=6)
@@ -275,6 +289,9 @@ def test_assign_course_mentor():
     from actions import new_course
     from actions import assign_course_mentor
     from models import Instructor
+
+    clean_up()
+
     prof = signup_random_user(Instructor, length=5)
     mentor1 = signup_random_user(Instructor, length=6)
     mentor2 = signup_random_user(Instructor, length=7)
@@ -298,6 +315,8 @@ def test_withdraw_course_mentor():
     from actions import new_course, assign_course_mentor
     from actions import withdraw_course_mentor
     from models import Instructor
+
+    clean_up()
 
     prof = signup_random_user(Instructor, length=5)
     mentor1 = signup_random_user(Instructor, length=6)
@@ -336,6 +355,8 @@ def test_grant_access():
     from actions import grant_access
     from models import Instructor, Staff
 
+    clean_up()
+
     prof = signup_random_user(Instructor, length=5)
     staff = signup_random_user(Staff, length=5)
 
@@ -362,6 +383,8 @@ def test_revoke_access():
     from actions import revoke_access
     from models import Instructor, Staff
 
+    clean_up()
+
     prof = signup_random_user(Instructor, length=5)
     staff = signup_random_user(Staff, length=5)
     cs101 = new_course(code='CS101', start_date=date.today(), course_name='Intro to CS', professor=prof)
@@ -386,6 +409,9 @@ def test_make_request():
     from actions import signup, new_course, set_letter_quota
     from actions import make_request
     from models import Instructor, Student
+
+    clean_up()
+
     prof = signup_random_user(Instructor, length=5)
     std = signup_random_user(Student, length=5)
     today = date.today()
@@ -492,6 +518,8 @@ def test_withdraw_request():
     from actions import withdraw_request
     from models import Instructor, Student, Request
     from models import STATUS_EMAILED, STATUS_REQUESTED, STATUS_DRAFTED, STATUS_FULFILLED
+    clean_up()
+
     prof = signup_random_user(Instructor, length=5)
     std = signup_random_user(Student, length=5)
     today = date.today()
@@ -555,6 +583,8 @@ def test_send_msg():
     from models import Instructor, Student, Request
     from models import STATUS_EMAILED, STATUS_REQUESTED, STATUS_DRAFTED, STATUS_FULFILLED
 
+    clean_up()
+
     prof = signup_random_user(Instructor, length=5)
     std = signup_random_user(Student, length=5)
     today = date.today()
@@ -580,6 +610,9 @@ def test_fulfill_request():
     from actions import signup, new_course, set_letter_quota, make_request
     from actions import fulfill_request
     from models import Instructor, Student
+
+    clean_up()
+
     prof1 = signup_random_user(Instructor, length=5)
     prof2 = signup_random_user(Instructor, length=6)
     std = signup_random_user(Student, length=5)
@@ -596,6 +629,7 @@ def test_fulfill_request():
         req = fulfill_request(instructor=prof2, request=req)
     # fulfill a request
     req = fulfill_request(instructor=prof1, request=req)
+    reload(req)
     # fulfill a fulfilled request
     with pytest.raises(ActionError):
         fulfill_request(instructor=prof1, request=req)
