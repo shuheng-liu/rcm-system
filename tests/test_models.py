@@ -229,9 +229,17 @@ def test_message():
     john = Student(first_name='John', last_name='Doe', email='john@doe.com', password='pwd', gender='M').save()
 
     # from student
-    Message(sender=john, content="Hello, Joe!", time=now()).validate()
+    msg = Message(sender=john, content="Hello, Joe!", time=now())
+    msg.validate()
+    assert msg.sender == 'John Doe'
     # from instructor
-    Message(sender=joe, content="Hello, John!", time=now()).validate()
+    msg = Message(sender=joe, content="Hello, John!", time=now())
+    msg.validate()
+    assert msg.sender == 'Joe Biden'
+    # custom sender_name
+    msg = Message(sender='US President', content="Hello, John!", time=now())
+    msg.validate()
+    assert msg.sender == 'US President'
     # w/o time
     Message(sender=john, content="Hello, again!").validate()
 
