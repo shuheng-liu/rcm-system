@@ -5,6 +5,7 @@ from datetime import date, datetime, timedelta
 from passlib.hash import pbkdf2_sha256
 from mongoengine import connect
 from mongoengine import ValidationError, NotUniqueError, DoesNotExist
+from models import STATUS_EMAILED, STATUS_REQUESTED, STATUS_UNFULFILLED, STATUS_FULFILLED
 from err import ActionError
 
 # connect and initialize database
@@ -517,7 +518,6 @@ def test_withdraw_request():
     from actions import signup, new_course, set_letter_quota, make_request
     from actions import withdraw_request
     from models import Instructor, Student, Request
-    from models import STATUS_EMAILED, STATUS_REQUESTED, STATUS_UNFULFILLED, STATUS_FULFILLED
 
     clean_up()
 
@@ -582,7 +582,6 @@ def test_send_msg():
     from actions import signup, new_course, set_letter_quota, make_request
     from actions import send_msg
     from models import Instructor, Student, Request
-    from models import STATUS_EMAILED, STATUS_REQUESTED, STATUS_UNFULFILLED, STATUS_FULFILLED
 
     clean_up()
 
@@ -635,7 +634,6 @@ def test_fulfill_request():
     with pytest.raises(ActionError):
         fulfill_request(instructor=prof1, request=req)
     # fulfill a request with specific date
-
     tomorrow = today + timedelta(days=1)
     set_letter_quota(student=std, recommender=prof2, course=pl101, quota=2)
     req = make_request(student=std, instructor=prof2, course=pl101, school_applied='UC2', program_applied='CS2',
@@ -646,3 +644,34 @@ def test_fulfill_request():
     assert req.date_fulfilled == tomorrow
 
     clean_up()
+
+
+def test_unfulfill_request():
+    from actions import signup, new_course, set_letter_quota, make_request, fulfill_request
+    from actions import unfulfill_request
+    from models import Instructor, Student
+
+    clean_up()
+
+    prof1 = signup_random_user(Instructor, length=5)
+    prof2 = signup_random_user(Instructor, length=6)
+    std = signup_random_user(Student, length=5)
+    today = date.today()
+    cs101 = new_course(code='CS101', start_date=today, course_name='Intro to CS', professor=prof1)
+    pl101 = new_course(code='PL101', start_date=today, course_name='Politics', professor=prof2)
+    set_letter_quota(student=std, recommender=prof1, course=cs101, quota=2)
+    req = make_request(student=std, instructor=prof1, course=cs101, school_applied='UC', program_applied='CS',
+                       deadline=today)
+    reload(std, prof1, req)
+
+    # unfulfill non-related request
+    with pytest.raises(DoesNotExist):
+        unfulfill_request(instructor=prof2, request=req)
+    # unfulfill a request
+    fulfill_request(instructor=prof1, request=req).reload()
+    unfulfill_request(instructor=prof1, request=req).reload()
+    assert req.date_fulfilled is None
+    assert req.status == STATUS_UNFULFILLED
+    # unfulfill an unfulfilled request
+    with pytest.raises(ActionError):
+        unfulfill_request(instructor=prof1, request=req)
