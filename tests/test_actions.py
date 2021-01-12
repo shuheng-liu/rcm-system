@@ -530,3 +530,28 @@ def test_withdraw_request():
     assert len(prof.requests_received) == 0
 
     clean_up()
+
+
+def test_send_msg():
+    from actions import signup, new_course, set_letter_quota, make_request
+    from actions import send_msg
+    from models import Instructor, Student, Request
+    from models import STATUS_EMAILED, STATUS_REQUESTED, STATUS_DRAFTED, STATUS_FULFILLED
+
+    prof = signup_random_user(Instructor, length=5)
+    std = signup_random_user(Student, length=5)
+    today = date.today()
+    cs101 = new_course(code='CS101', start_date=today, course_name='Intro to CS', professor=prof)
+    set_letter_quota(student=std, recommender=prof, course=cs101, quota=2)
+    req = make_request(student=std, instructor=prof, course=cs101, school_applied='UC', program_applied='CS',
+                       deadline=today)
+    send_msg(sender=std, content='Hello, Prof.', request=req)
+    req.reload()
+    msg = req.messages.get()
+    assert msg.sender == std.first_name + ' ' + std.last_name
+    assert msg.content == 'Hello, Prof.'
+
+    send_msg(sender="Anonymous", content='Hello, there.', request=req)
+    req.reload()
+    msg = req.messages.filter(sender='Anonymous').get()
+    assert msg.content == 'Hello, there.'
