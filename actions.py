@@ -151,10 +151,15 @@ def make_request(student, instructor, course, school_applied, program_applied, d
     return req
 
 
-def update_request(request, student=None, instructor=None, course=None, school_applied=None, program_applied=None,
-                   deadline=None):
-    # TODO update `request` and save
-    pass
+def withdraw_request(student, request):
+    r4c = student.req_for_courses.filter(course=request.course, recommender=request.instructor).get()
+    if request in r4c.requests_sent:
+        r4c.requests_sent.remove(request)
+        r4c.requests_quota += 1
+        student.save()
+        request.delete()
+    else:
+        raise DoesNotExist(f"Request {request} doesn't exist")
 
 
 def send_msg(sender, content, request):
