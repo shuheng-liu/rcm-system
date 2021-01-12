@@ -237,7 +237,7 @@ def test_message():
 
     # content too long
     with pytest.raises(ValidationError):
-        Message(sender=joe, content="a"*501).validate()
+        Message(sender=joe, content="a" * 501).validate()
 
     clean_up()
 
@@ -266,3 +266,8 @@ def test_request_for_course():
         RequestForCourse(requests_quota=10, recommender=joe).validate()
 
     clean_up()
+
+
+def test_deletion_rules():
+    # TODO test reverse delete rules
+    pass
