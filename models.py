@@ -68,14 +68,13 @@ class Course(Document):
 
 
 class Message(EmbeddedDocument):
-    sender = ReferenceField(User, required=True)
-    sender_name = StringField(max_length=200, default='', required=True)
+    sender = StringField(max_length=200, default='', required=True)
     content = StringField(max_length=500, required=True)
     time = DateTimeField(default=datetime.utcnow, required=True)
 
     def clean(self):
-        if self.sender_name == '':
-            self.sender_name = self.sender.first_name + ' ' + self.sender.last_name
+        if isinstance(self.sender, User):
+            self.sender = self.sender.first_name + ' ' + self.sender.last_name
 
 
 STATUS_REQUESTED = 1000
