@@ -17,6 +17,7 @@ from mongoengine import IntField
 from mongoengine import BooleanField
 from mongoengine import StringField
 from mongoengine import ValidationError
+from mongoengine import CASCADE, DENY, PULL, DO_NOTHING, NULLIFY
 
 
 class User(Document):
@@ -60,10 +61,10 @@ class Course(Document):
     code = StringField(max_length=15, required=True, unique=True)
     course_name = StringField(max_length=1000)
     start_date = DateField(default=datetime.today, required=True)
-    professor = ReferenceField(Instructor, required=True)
-    mentors = ListField(ReferenceField(Instructor))
-    coordinator = ReferenceField(Staff)
-    students = ListField(ReferenceField(Student))
+    professor = ReferenceField(Instructor, required=True, reverse_delete_rule=DENY)
+    mentors = ListField(ReferenceField(Instructor, reverse_delete_rule=PULL))
+    coordinator = ReferenceField(Staff, reverse_delete_rule=NULLIFY)
+    students = ListField(ReferenceField(Student, reverse_delete_rule=PULL))
 
 
 class Message(EmbeddedDocument):
@@ -89,9 +90,9 @@ def _validate_request_status(status):
 
 
 class Request(Document):
-    student = ReferenceField(Student, required=True)
-    instructor = ReferenceField(Instructor, required=True)
-    course = ReferenceField(Course, required=True)
+    student = ReferenceField(Student, required=True, reverse_delete_rule=DENY)
+    instructor = ReferenceField(Instructor, required=True, reverse_delete_rule=DENY)
+    course = ReferenceField(Course, required=True, reverse_delete_rule=DENY)
     school_applied = StringField(max_length=50, required=True)
     program_applied = StringField(max_length=50, required=True)
     deadline = DateField(required=True)
@@ -106,3 +107,8 @@ class Request(Document):
             raise ValidationError('Request fulfilled but not specified when')
         if (self.date_fulfilled is not None) and (self.status != STATUS_FULFILLED):
             raise ValidationError('Request not fulfilled but date_fulfilled is set')
+
+
+Course.register_delete_rule(Instructor, 'courses', PULL)
+Course.register_delete_rule(Staff, 'accessible_courses', PULL)
+Request.register_delete_rule(Instructor, 'requests_received', PULL)
