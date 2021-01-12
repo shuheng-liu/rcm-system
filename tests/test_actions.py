@@ -485,3 +485,48 @@ def test_make_request():
     assert req.deadline == today
 
     clean_up()
+
+
+def test_withdraw_request():
+    from actions import signup, new_course, set_letter_quota, make_request
+    from actions import withdraw_request
+    from models import Instructor, Student, Request
+    from models import STATUS_EMAILED, STATUS_REQUESTED, STATUS_DRAFTED, STATUS_FULFILLED
+    prof = signup_random_user(Instructor, length=5)
+    std = signup_random_user(Student, length=5)
+    today = date.today()
+    cs101 = new_course(code='CS101', start_date=today, course_name='Intro to CS', professor=prof)
+    set_letter_quota(student=std, recommender=prof, course=cs101, quota=2)
+    req = make_request(student=std, instructor=prof, course=cs101, school_applied='UC', program_applied='CS',
+                       deadline=today)
+    withdraw_request(student=std, request=req)
+    reload(std, prof)
+    assert Request.objects.count() == 0
+    assert len(std.req_for_courses.get().requests_sent) == 0
+    assert std.req_for_courses.get().requests_quota == 2
+    assert len(prof.requests_received) == 0
+
+    # withdraw a non-existent request
+    std2 = signup_random_user(Student, length=6)
+    prof2 = signup_random_user(Instructor, length=6)
+    pl102 = new_course(code='PL102', start_date=today, course_name='Politics', professor=prof2)
+    set_letter_quota(student=std2, recommender=prof2, course=pl102, quota=2)
+    req2 = make_request(student=std2, instructor=prof2, course=pl102, school_applied='UC2', program_applied='CS2',
+                        deadline=today)
+    with pytest.raises(DoesNotExist):
+        withdraw_request(student=std, request=req2)
+    reload(std, std2, prof, prof2)
+
+    # removing a request not attached to the student shouldn't delete the request
+    assert Request.objects.count() == 1
+    assert len(std2.req_for_courses.get().requests_sent) == 1
+    assert req2 in std2.req_for_courses.get().requests_sent
+    assert std2.req_for_courses.get().requests_quota == 1
+    assert len(prof2.requests_received) == 1
+
+    # and it shouldn't affect other students/staffs
+    assert len(std.req_for_courses.get().requests_sent) == 0
+    assert std.req_for_courses.get().requests_quota == 2
+    assert len(prof.requests_received) == 0
+
+    clean_up()
