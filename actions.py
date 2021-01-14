@@ -37,13 +37,13 @@ def signin(role, email, pwd_submitted):
     return user
 
 
-def change_password(user, old_password, password):
+def change_password(role, user_email, old_password, password):
     # verify old password
-    if not pbkdf2_sha256.verify(old_password, user.password):
+    hashed_password = role.objects(email=user_email).get().password
+    if not pbkdf2_sha256.verify(old_password, hashed_password):
         raise ActionError(f"Incorrect password")
     # update password
-    user.password = pbkdf2_sha256.hash(password)
-    return user.save()
+    role.objects(email=user_email).update(set__password=pbkdf2_sha256.hash(password))
 
 
 def new_course(code, start_date, course_name, professor):
