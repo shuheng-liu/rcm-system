@@ -131,19 +131,28 @@ def make_request(student, instructor, course, school_applied, program_applied, d
         status=status,
     ).save()
     # register request to student
+    # TODO use mongoengine syntax once this issue is resolved:
+    # https://github.com/MongoEngine/mongoengine/issues/2339
 
-    # Unfortunately the following is not supported
-    # student.req_for_courses.\
-    #     filter(course=course, recommender=instructor, requests_quota__gte=0).\
-    #     update(dec__requests_quota=1, push__requests_sent=req)
-
-    # HACK, the following is not thread-safe
-    r4c = student.req_for_courses.filter(course=course, recommender=instructor).get()
-    if r4c.requests_quota <= 0:
+    success = Student.objects(
+        __raw__={
+            "email": student.email,
+            "req_for_courses": {
+                "$elemMatch": {
+                    "course": course.id,
+                    "recommender": instructor.id,
+                    "requests_quota": {"$gt": 0},
+                }
+            }
+        }
+    ).update(
+        __raw__={
+            "$inc": {"req_for_courses.$.requests_quota": -1},
+            "$push": {"req_for_courses.$.requests_sent": req.id}
+        }
+    )
+    if not success:
         raise DoesNotExist(f"Student {student} has no remaining quota for course {course}")
-    r4c.requests_quota -= 1
-    r4c.requests_sent.append(req)
-    student.save()
 
     # register `request` to `instructor`
     instructor.update(push__requests_received=req)
