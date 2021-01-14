@@ -528,6 +528,7 @@ def test_withdraw_request():
     set_letter_quota(student=std, recommender=prof, course=cs101, quota=2)
     req = make_request(student=std, instructor=prof, course=cs101, school_applied='UC', program_applied='CS',
                        deadline=today)
+    reload(std, prof)
     withdraw_request(student=std, request=req)
     reload(std, prof)
     assert Request.objects.count() == 0
